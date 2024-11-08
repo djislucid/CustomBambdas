@@ -1,0 +1,82 @@
+/**
+* Highlights entries in the HTTP history based on the presence of specific headers.
+* Adds comments indicating which headers were discovered in requests and responses.
+* Code inspired by: https://github.com/flamebarke/SkittlesBambda
+**/
+
+// Define a vulnerable parameter group record
+record VulnParamGroup(String title, HighlightColor color, String... parameterNames) {}
+
+// Define the header group for filtering
+// Comment this line and uncomment the one below for different headers
+VulnParamGroup xheaders = new VulnParamGroup("XHEAD", HighlightColor.MAGENTA, 
+    "activity-id", "correlation-token", "interactionid", "request-context-id", "request-id", 
+    "service-transaction-id", "trace-context", "traceparent", "tracestate", "x-api-request-id", 
+    "x-activity-id", "x-activity-trace-id", "x-amzn-trace-id", "x-b3-flags", "x-b3-parentspanid", 
+    "x-b3-sampled", "x-b3-spanid", "x-b3-traceid", "x-client-request-id", 
+    "x-correlation-context", "x-correlation-id", "x-correlationid", "x-debug-id", "x-flow-id", 
+    "x-forwarded-request-id", "x-invocation-id", "x-operation-id", "x-request-chain-id", 
+    "x-request-context", "x-request-id", "x-requestid", "x-session-id", "x-span-id", 
+    "x-trace-id", "x-transaction-id", "x-unique-id", "x-workflow-id"
+);
+// VulnParamGroup xheaders = new VulnParamGroup("XHEAD", HighlightColor.MAGENTA, "");
+
+// Toggle for highlighting
+boolean highlightEnabled = true;
+
+// Convert the list of headers to lowercase for easier matching
+Set<String> headerSet = new HashSet<>();
+for (String header : xheaders.parameterNames()) {
+    headerSet.add(header.toLowerCase());
+}
+
+var request = requestResponse.request();
+var response = requestResponse.response();
+
+Set<String> foundHeadersRequest = new HashSet<>();
+Set<String> foundHeadersResponse = new HashSet<>();
+
+for (var header : request.headers()) {
+    String headerName = header.name().toLowerCase();
+    if (headerSet.contains(headerName)) {
+        foundHeadersRequest.add(header.name());
+    }
+}
+
+if (response != null) {
+    for (var header : response.headers()) {
+        String headerName = header.name().toLowerCase();
+        if (headerSet.contains(headerName)) {
+            foundHeadersResponse.add(header.name());
+        }
+    }
+}
+
+HighlightColor highlightColor = null;
+StringBuilder noteBuilder = new StringBuilder();
+
+if (!foundHeadersRequest.isEmpty() && !foundHeadersResponse.isEmpty()) {
+    // Headers in both request and response
+    highlightColor = HighlightColor.MAGENTA; 
+    noteBuilder.append("Headers in Request: ").append(String.join(", ", foundHeadersRequest));
+    noteBuilder.append(" | Headers in Response: ").append(String.join(", ", foundHeadersResponse));
+} else if (!foundHeadersRequest.isEmpty()) {
+    // Headers only in request
+    highlightColor = HighlightColor.BLUE;
+    noteBuilder.append("Headers in Request: ").append(String.join(", ", foundHeadersRequest));
+} else if (!foundHeadersResponse.isEmpty()) {
+    // Headers only in response
+    highlightColor = HighlightColor.ORANGE; 
+    noteBuilder.append("Headers in Response: ").append(String.join(", ", foundHeadersResponse));
+}
+
+if (highlightEnabled && highlightColor != null) {
+    requestResponse.annotations().setHighlightColor(highlightColor);
+
+    // Add a note if headers were found
+    if (noteBuilder.length() > 0) {
+        requestResponse.annotations().setNotes(noteBuilder.toString());
+    }
+}
+
+return true;
