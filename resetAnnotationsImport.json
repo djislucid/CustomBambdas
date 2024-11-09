@@ -1,0 +1,7 @@
+{
+    "bambda":{
+        "http_history_display_filter":{
+            "bambda":"// Since Bambdas stack, reset Bambda to clear all highlights and notes\r\nif (requestResponse.hasResponse()) {\r\n    // Reset the highlight color\r\n    requestResponse.annotations().setHighlightColor(HighlightColor.NONE);\r\n\r\n    // Clear any existing notes\r\n    requestResponse.annotations().setNotes(\"\");\r\n}\r\n\r\nreturn true; // Ensure all entries remain visible"
+        }
+    }
+}

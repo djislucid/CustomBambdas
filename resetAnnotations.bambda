@@ -1,0 +1,11 @@
+// Since Bambdas stack, reset Bambda to clear all highlights and notes
+if (requestResponse.hasResponse()) {
+    // Reset the highlight color
+    requestResponse.annotations().setHighlightColor(HighlightColor.NONE);
+    
+    // Clear any existing notes
+    requestResponse.annotations().setNotes("");
+}
+
+return true; // Ensure all entries remain visible
+

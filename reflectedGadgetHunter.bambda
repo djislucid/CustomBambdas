@@ -1,0 +1,48 @@
+if (!requestResponse.hasResponse()) {
+	return false;
+}
+
+// test "csc-cchcchdevtsttrn" to filter out Location headers to test that
+// test "allow-from https://mingle-i03" to see any headers
+// test "integrator/csc_server" to test for response body
+var canaryString = "electricyellow";
+
+var response = requestResponse.response();
+
+// Annotation builders
+StringBuilder noteBuilder = new StringBuilder();
+HighlightColor highlightColor = null;
+
+// Highlight in red if our canary was found in the Location header
+var locationHeaderValue = response.headerValue("Location");
+if (locationHeaderValue != null && locationHeaderValue.toLowerCase().contains(canaryString.toLowerCase())) {
+	highlightColor = HighlightColor.RED;
+	noteBuilder.append("Location header contains canary: ").append(locationHeaderValue).append("\n");
+}
+
+// Highlight in pink if any other headers contain the canary
+for (var header : response.headers()) {
+	if (!header.name().equalsIgnoreCase("Location") && header.value().toLowerCase().contains(canaryString.toLowerCase())) {
+		// Make sure we don't overwrite any RED headers if they contain other headers with the same value
+		if (highlightColor != HighlightColor.RED) {
+			highlightColor = HighlightColor.PINK;
+		}
+		noteBuilder.append("Header '").append(header.name()).append("' contains the canary: ").append(header.value()).append("\n");
+	}
+}
+
+// Highlight in green if the canary was reflected in the response body
+var responseBody = response.bodyToString().trim();
+if (responseBody != null && responseBody.toLowerCase().contains(canaryString.toLowerCase())) {
+	highlightColor = HighlightColor.GREEN;
+	noteBuilder.append("Response body contains the canary: ").append(canaryString);
+}
+
+// Apply the annotations
+if (highlightColor != null) {
+	requestResponse.annotations().setHighlightColor(highlightColor);
+	requestResponse.annotations().setNotes(noteBuilder.toString());
+}
+
+// Change to false if you just want to filter non-matches
+return true;

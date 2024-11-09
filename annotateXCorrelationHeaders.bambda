@@ -56,7 +56,7 @@ HighlightColor highlightColor = null;
 StringBuilder noteBuilder = new StringBuilder();
 
 if (!foundHeadersRequest.isEmpty() && !foundHeadersResponse.isEmpty()) {
-    // Headers in both request and response
+    // headers in both request and response
     highlightColor = HighlightColor.MAGENTA; 
     noteBuilder.append("Headers in Request: ").append(String.join(", ", foundHeadersRequest));
     noteBuilder.append(" | Headers in Response: ").append(String.join(", ", foundHeadersResponse));
